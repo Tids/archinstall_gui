@@ -1,42 +1,65 @@
 # Maintainer: Anton Hvornum anton@hvornum.se
 # Contributor: Anton Hvornum anton@hvornum.se
-pkgname="archinstall-gui"
-pkgver="0.1rc20"
-pkgdesc="A graphical installer for Arch Linux. Useful for Live CD's etc."
+# Contributor: Fabian Bornschein plusfabi-cat-gmail-dog-com
+pkgbase=archinstall_gui
+pkgname=('archinstall-gui-server' 'archinstall-gui-standalone' 'archinstall-gui-desktop')
+pkgver=v0.1rc20
 pkgrel=1
 url="https://github.com/Torxed/archinstall_gui"
-archinstall_url="https://github.com/Torxed/archinstall.git"
 license=('GPLv3')
-provides=("${pkgname}")
-md5sums=('SKIP')
 arch=('x86_64')
-source=("${pkgname}-v${pkgver}-x86_64.tar.gz::https://github.com/Torxed/archinstall_gui/archive/v$pkgver.tar.gz")
-#depends=('python>=3.8' 'chromium' 'xorg-server' 'xorg-xinit' 'archinstall')
-depends=('python>=3.8' 'chromium' 'xorg-server' 'xorg-xinit')
-optdepends=('python-systemd: Adds more controlled logging functionality')
+makedepends=(git)
+_archinstall_commit=2c24903932342a32cdfa8c684547859116fb254e		# tags/v2.0.5
+_archinstall_gui_commit=2248aeb3099c296baf873c5e45aa181f09346189	# tags/v0.1rc20
+source=(git+https://github.com/Torxed/archinstall.git#commit=${_archinstall_commit}
+		git+https://github.com/Torxed/archinstall_gui.git#commit=${_archinstall_gui_commit}
+		archinstall-gui
+		archinstall_gui.service
+		archinstall_gui.svg
+		org.archlinux.archinstall_gui.desktop)
+sha256sums=('SKIP'
+            'SKIP'
+            '78ea37402accdb4584b0d48618add5f074bf353a29f85ad0cae4dd3a4b5be323'
+            'eb0acdf595173f97b7c1ef6ff92cd62c63fd4e0e7d870087c65b2f3f1bb6438c'
+            '23f5bc2578f3baf3cb284fed4c68370c5eebba46e3f29c1ce9151076f2ae8daf'
+            '3943d9349c71456bf6bf72c90ba39a432f78df6dbe99969fa937bd14deee498f')
 
-package() {
-	# Will add this back when I've renamed the project upstream:
-	# cd "${pkgname}-${pkgver}"
-	cd "archinstall_gui-${pkgver}"
+pkgver() {
+  cd "${pkgbase}"
+  git describe --tags | sed 's/-/+/g'
+}
+
+package_archinstall-gui-server() {
+	pkgdesc="Server for a graphical installer for Arch Linux."
+	depends=('python>=3.8' 'systemd')
+	optdepends=('python-systemd: Adds more controlled logging functionality')
 
 	mkdir -p "${pkgdir}/srv/archinstall_gui"
 	mkdir -p "${pkgdir}/usr/bin"
-	mkdir -p "${pkgdir}/etc/systemd/system"
 
-	# PATCH: While we're working on a better shipping strat for archinstall,
-	# we'll have to git clone the repo manually. archinstall PKGBUILD currently builds and installs
-	# the binary version of archinstall for a more "standalone" approach, but we're 
-	# introducing optdepends for python>=3.8 which will build and install the library.
-	# After that, we can completely remove the submodule-requirement for archinstall in archinstall_gui.
-	# But until then, we'll have to manually clone it in in the wait for a dual-build release of archinstall PKGBUILD.
-	rm -rf archinstall_gui/dependencies/archinstall
-	git clone "${archinstall_url}" archinstall_gui/dependencies/archinstall
-
-	mv archinstall_gui/* "${pkgdir}/srv/archinstall_gui/"
-	mv PKGBUILD/archinstall-gui "${pkgdir}/usr/bin/archinstall-gui"
-	mv PKGBUILD/archinstall_gui.service "${pkgdir}/etc/systemd/system/archinstall_gui.service"
+	mv "${srcdir}/archinstall_gui/archinstall_gui"/* "${pkgdir}/srv/archinstall_gui/"
+	mv "${srcdir}/archinstall/archinstall" "${pkgdir}/srv/archinstall_gui/dependencies/"
 
 	chmod +x "${pkgdir}/srv/archinstall_gui/webgui.py"
-	chmod +x "${pkgdir}/usr/bin/archinstall-gui"
+
+	install -Dm 644 "${srcdir}/archinstall_gui.service" \
+		"${pkgdir}/usr/lib/systemd/system/archinstall_gui.service"
+}
+
+package_archinstall-gui-standalone() {
+	pkgdesc="A graphical installer for Arch Linux."
+	depends=('archinstall-gui-server' 'chromium' 'xorg-server' 'xorg-xinit')
+
+	install -Dm 755 "${srcdir}/archinstall-gui" \
+		"${pkgdir}/usr/bin/archinstall-gui"
+}
+
+package_archinstall-gui-desktop() {
+	pkgdesc="A graphical installer for Arch Linux."
+	depends=('archinstall-gui-server' 'xdg-utils')
+
+	install -Dm 644 "${srcdir}/archinstall_gui.svg" \
+		"${pkgdir}/usr/share/pixmaps/archinstall_gui.svg"
+	install -Dm 644 "${srcdir}/org.archlinux.archinstall_gui.desktop" \
+		"${pkgdir}/usr/share/applications/org.archlinux.archinstall_gui.desktop"	
 }
