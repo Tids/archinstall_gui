@@ -1,10 +1,10 @@
 # Maintainer: Anton Hvornum anton@hvornum.se
 # Contributor: Anton Hvornum anton@hvornum.se
 # Contributor: Fabian Bornschein plusfabi-cat-gmail-dog-com
-pkgbase=archinstall_gui
+pkgbase=archinstall-gui
 pkgname=('archinstall-gui-server' 'archinstall-gui-standalone' 'archinstall-gui-desktop')
 pkgver=v0.1rc20
-pkgrel=1
+pkgrel=2
 url="https://github.com/Torxed/archinstall_gui"
 license=('GPLv3')
 arch=('x86_64')
@@ -21,11 +21,11 @@ sha256sums=('SKIP'
             'SKIP'
             '78ea37402accdb4584b0d48618add5f074bf353a29f85ad0cae4dd3a4b5be323'
             'eb0acdf595173f97b7c1ef6ff92cd62c63fd4e0e7d870087c65b2f3f1bb6438c'
-            '23f5bc2578f3baf3cb284fed4c68370c5eebba46e3f29c1ce9151076f2ae8daf'
+            '31d5f6a03ddcac20d81696ba717ceafe63caf592491970ceafa7d5717c1c2224'
             '3943d9349c71456bf6bf72c90ba39a432f78df6dbe99969fa937bd14deee498f')
 
 pkgver() {
-  cd "${pkgbase}"
+  cd "archinstall_gui"
   git describe --tags | sed 's/-/+/g'
 }
 
